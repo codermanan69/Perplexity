@@ -24,7 +24,7 @@ export async function register(req, res) {
     }, process.env.JWT_SECRET)
 
 
-    
+
     await sendEmail({
         to: email,
         subject: "Welcome to Perplexity!",
@@ -50,41 +50,41 @@ export async function register(req, res) {
 
 }
 
-export async function login(req ,res ){
-    const { email , password } = req.body
+export async function login(req, res) {
+    const { email, password } = req.body
 
-    const user = await userModel.findOne({email})
+    const user = await userModel.findOne({ email })
 
-    if(!user){
+    if (!user) {
         return res.status(400).json({
-            message:"Invalid email and password",
+            message: "Invalid email and password",
             success: false,
-            err:"Invalid credentials"
+            err: "Invalid credentials"
         })
     }
 
     const isPasswordMatch = await user.comparePassword(password);
 
-    if(!isPasswordMatch){
+    if (!isPasswordMatch) {
         return res.status(400).json({
-            message : "Invalid email and password",
+            message: "Invalid email and password",
             success: false,
-            err:"Invalid credentials"
+            err: "Invalid credentials"
         })
     }
 
-    if(!user.verified){
+    if (!user.verified) {
         return res.status(400).json({
-            message : "Please verify your email",
+            message: "Please verify your email",
             success: false,
-            err:"Email not verified"
+            err: "Email not verified"
         })
     }
 
     const token = jwt.sign({
-        id:user._id,
+        id: user._id,
         username: user.username,
-    }, process.env.JWT_SECRET, { expiresIn: '7d'})
+    }, process.env.JWT_SECRET, { expiresIn: '7d' })
 
     res.cookie("token", token)
 
@@ -97,24 +97,24 @@ export async function login(req ,res ){
             email: user.email
         }
     })
-    
+
 }
 
-export async function getMe( req , res){
-    const userId= req.user.id;
+export async function getMe(req, res) {
+    const userId = req.user.id;
 
-    const user =  await userModel.findById(userId).select("-password");
+    const user = await userModel.findById(userId).select("-password");
 
-    if(!user){
+    if (!user) {
         return res.status(404).json({
-            message : "User not found",
+            message: "User not found",
             success: false,
-            err:"User not found"
+            err: "User not found"
         })
     }
 
     res.status(200).json({
-        message : "user details fetched successfully",
+        message: "user details fetched successfully",
         success: true,
         user
     })
@@ -122,43 +122,43 @@ export async function getMe( req , res){
 }
 
 
-export async function verifyEmail(req , res){
+export async function verifyEmail(req, res) {
     const { token } = req.query;
 
     try {
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-   
 
 
-    const user = await userModel.findOne({email : decoded.email });
 
-    if(!user){
-        return res.status(400).json({
-            message : "Invalid Token",
-            success: false,
-            err:"User not found"
-        })
-    }
+        const user = await userModel.findOne({ email: decoded.email });
 
-    user.verified = true;
+        if (!user) {
+            return res.status(400).json({
+                message: "Invalid Token",
+                success: false,
+                err: "User not found"
+            })
+        }
 
-    await user.save();
+        user.verified = true;
 
-    const html = 
-     `
+        await user.save();
+
+        const html =
+            `
         <h1>Email Verified Successfully!</h1>
         <p>Your email has been verified. You can now log in to your account.</p>
         <a href="http://localhost:3000/login">Go to Login</a>
     `
 
-    res.send(html);
-     }catch(err){
+        res.send(html);
+    } catch (err) {
         return res.status(400).json({
-            message : "Invalid Token",
+            message: "Invalid Token",
             success: false,
-            err:err.message
+            err: err.message
         })
     }
 }
