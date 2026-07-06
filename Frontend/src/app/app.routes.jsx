@@ -4,6 +4,7 @@ import Register from '../features/auth/pages/Register.jsx';
 import Dashboard from '../features/chat/pages/Dashboard.jsx';
 import Protected from '../features/auth/components/Protected.jsx';
 
+
 export const router = createBrowserRouter([
     {
         path: '/register',
@@ -16,5 +17,9 @@ export const router = createBrowserRouter([
     {
         path: '/',
         element: <Protected><Dashboard /></Protected> 
+    },
+    {
+        path : '/dashboard',
+        element : <Navigate to="/" replace/>
     }
 ]);
