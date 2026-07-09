@@ -1,33 +1,36 @@
-import "dotenv/config";
-import readline from "node:readline";
-import { tavily } from "@tavily/core";
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
+import { ChatMistralAI } from "@langchain/mistralai"
+import { HumanMessage, SystemMessage, AIMessage } from "@langchain/core/messages";
 
-const tvly = tavily({
-  apiKey: process.env.TAVILY_API_KEY,
+const geminiModel = new ChatGoogleGenerativeAI({
+  model: "gemini-flash-latest",
+  apiKey: process.env.GEMINI_API_KEY
 });
 
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-});
+const mistralModel = new ChatMistralAI({
+  model: "mistral-small-latest",
+  apiKey: process.env.MISTRAL_API_KEY
+})
 
-export async function testAi() {
-  rl.question("\nYou: ", async (question) => {
-    if (question.toLowerCase() === "exit") {
-      console.log("Goodbye 👋");
-      rl.close();
-      return;
+export async function generateResponse(messages) {
+  const response = await mistralModel.invoke(messages.map(msg => {
+    if (msg.role == "user") {
+      return new HumanMessage(msg.content)
     }
-
-    try {
-      const response = await tvly.search(question);
-
-      console.log("\nAI:");
-      console.log(response.results[0].content);
-    } catch (err) {
-      console.error(err.message);
+    else if (msg.role == "ai") {
+      return new AIMessage(msg.content)
     }
+  }));
+  return response.text;
+}
 
-    testAi();
-  });
+export async function generateChatTitle(message) {
+  const response = await mistralModel.invoke([
+    new SystemMessage(` You are a helpful and precise assistant for answering questions.
+                 If you don't know the answer, say you don't know. `),
+    new HumanMessage(`
+      Generate a title for a chat conversation based on the following first message:"${message}"
+      `)
+  ]);
+  return response.text;
 }
