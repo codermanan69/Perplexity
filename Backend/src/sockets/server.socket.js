@@ -3,12 +3,12 @@ import { Server } from "socket.io";
 let io;
 
 export function initSocket(httpServer) {
-    io = new Server(httpServer,{
-    cors: {
-        origin : "http://localhost:5173",
-        credentials: true
-    }
-    })
+    io = new Server(httpServer, {
+        cors: {
+            origin: process.env.CLIENT_URL || "http://localhost:5173",
+            credentials: true
+        }
+    });
 
     console.log("Socket io server is running")
 

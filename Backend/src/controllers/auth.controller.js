@@ -33,7 +33,7 @@ export async function register(req, res) {
                     <p>Hi ${username},</p>
                     <p>Thank you for registering at <strong>Perplexity</strong>. We're excited to have you on board!</p>
                     <p>Please verify your email address by clicking the link below:</p>
-                    <a href="http://localhost:3000/api/auth/verify-email?token=${emailVerificationToken}">Verify Email</a>
+                    <a href="${process.env.API_URL || 'http://localhost:3000/api'}/auth/verify-email?token=${emailVerificationToken}">Verify Email</a>
                     <p>If you did not create an account, please ignore this email.</p>
                     <p>Best regards,<br>The Perplexity Team</p>
             `
@@ -134,15 +134,15 @@ export async function verifyEmail(req, res) {
         const user = await userModel.findOne({ email: decoded.email });
 
         if (!user) {
-            return res.redirect(`http://localhost:5173/verify-email?success=false&error=${encodeURIComponent("User not found")}`);
+            return res.redirect(`${process.env.CLIENT_URL || 'http://localhost:5173'}/verify-email?success=false&error=${encodeURIComponent("User not found")}`);
         }
 
         user.verified = true;
         await user.save();
 
-        return res.redirect(`http://localhost:5173/verify-email?success=true`);
+        return res.redirect(`${process.env.CLIENT_URL || 'http://localhost:5173'}/verify-email?success=true`);
     } catch (err) {
-        return res.redirect(`http://localhost:5173/verify-email?success=false&error=${encodeURIComponent(err.message)}`);
+        return res.redirect(`${process.env.CLIENT_URL || 'http://localhost:5173'}/verify-email?success=false&error=${encodeURIComponent(err.message)}`);
     }
 }
 
@@ -174,7 +174,7 @@ export async function resendVerification(req, res) {
                 <p>Hi ${user.username},</p>
                 <p>Thank you for registering at <strong>Perplexity</strong>. We're excited to have you on board!</p>
                 <p>Please verify your email address by clicking the link below:</p>
-                <a href="http://localhost:3000/api/auth/verify-email?token=${emailVerificationToken}">Verify Email</a>
+                <a href="${process.env.API_URL || 'http://localhost:3000/api'}/auth/verify-email?token=${emailVerificationToken}">Verify Email</a>
                 <p>If you did not create an account, please ignore this email.</p>
                 <p>Best regards,<br>The Perplexity Team</p>
             `
