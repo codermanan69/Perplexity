@@ -67,13 +67,17 @@ export const useChat = () => {
             }
         } catch (error) {
             console.error("Failed to send message:", error);
-            const errorMsg = error.response?.data?.message || error.message || "Failed to send message";
-            const actualError = error.response?.data?.error;
+            const apiError = error.response?.data?.error || error.response?.data?.message || error.message;
             
-            // Pop an alert so we can instantly see what Gemini/Tavily is complaining about
-            alert("BACKEND ERROR DETAILS:\n\n" + errorMsg + "\n\n" + (actualError || "No detailed error provided"));
-            
-            dispatch(setError(errorMsg));
+            // Clean up the error message if it's a huge Google API string
+            let displayError = "Failed to send message";
+            if (apiError.includes("429 Too Many Requests") || apiError.includes("Quota exceeded")) {
+                displayError = "AI Quota Exceeded. Please wait a minute before trying again.";
+            } else {
+                displayError = apiError.substring(0, 100) + (apiError.length > 100 ? "..." : "");
+            }
+
+            dispatch(setError(displayError));
         } finally {
             dispatch(setLoading(false));
         }
