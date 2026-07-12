@@ -67,7 +67,13 @@ export const useChat = () => {
             }
         } catch (error) {
             console.error("Failed to send message:", error);
-            dispatch(setError(error.response?.data?.message || error.message || "Failed to send message"));
+            const errorMsg = error.response?.data?.message || error.message || "Failed to send message";
+            const actualError = error.response?.data?.error;
+            
+            // Pop an alert so we can instantly see what Gemini/Tavily is complaining about
+            alert("BACKEND ERROR DETAILS:\n\n" + errorMsg + "\n\n" + (actualError || "No detailed error provided"));
+            
+            dispatch(setError(errorMsg));
         } finally {
             dispatch(setLoading(false));
         }
