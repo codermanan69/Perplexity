@@ -9,7 +9,7 @@ import {
   Menu, X, Plus, Search, Trash2, Settings, LogOut, Compass, Send, Paperclip, 
   Sparkles, Sun, Moon, ArrowUp, MessageSquare, Loader2
 } from 'lucide-react'
-import axios from 'axios'
+import api from '../../auth/service/auth.api'
 
 // Custom Code Block component with Copy button
 const CodeBlock = ({ className, children }) => {
@@ -140,7 +140,7 @@ const Dashboard = () => {
 
   const handleLogout = async () => {
   try {
-    await axios.post(
+    await api.post(
     "/auth/logout",
       {},
       { withCredentials: true }
