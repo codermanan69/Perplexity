@@ -25,22 +25,21 @@ export async function register(req, res) {
 
 
 
-    try {
-        await sendEmail({
-            to: email,
-            subject: "Welcome to Perplexity!",
-            html: `
-                    <p>Hi ${username},</p>
-                    <p>Thank you for registering at <strong>Perplexity</strong>. We're excited to have you on board!</p>
-                    <p>Please verify your email address by clicking the link below:</p>
-                    <a href="${process.env.API_URL || 'http://localhost:3000/api'}/auth/verify-email?token=${emailVerificationToken}">Verify Email</a>
-                    <p>If you did not create an account, please ignore this email.</p>
-                    <p>Best regards,<br>The Perplexity Team</p>
-            `
-        });
-    } catch (mailError) {
+    // Run email sending asynchronously so it doesn't block the frontend response
+    sendEmail({
+        to: email,
+        subject: "Welcome to Perplexity!",
+        html: `
+                <p>Hi ${username},</p>
+                <p>Thank you for registering at <strong>Perplexity</strong>. We're excited to have you on board!</p>
+                <p>Please verify your email address by clicking the link below:</p>
+                <a href="${process.env.API_URL || 'http://localhost:3000/api'}/auth/verify-email?token=${emailVerificationToken}">Verify Email</a>
+                <p>If you did not create an account, please ignore this email.</p>
+                <p>Best regards,<br>The Perplexity Team</p>
+        `
+    }).catch(mailError => {
         console.error("Failed to send welcome/verification email:", mailError.message || mailError);
-    }
+    });
     res.status(201).json({
         message: "User registered successfully",
         success: true,
@@ -167,7 +166,7 @@ export async function resendVerification(req, res) {
             email: user.email,
         }, process.env.JWT_SECRET);
 
-        await sendEmail({
+        sendEmail({
             to: email,
             subject: "Welcome to Perplexity!",
             html: `
@@ -178,7 +177,7 @@ export async function resendVerification(req, res) {
                 <p>If you did not create an account, please ignore this email.</p>
                 <p>Best regards,<br>The Perplexity Team</p>
             `
-        });
+        }).catch(err => console.error("Failed to resend email:", err));
 
         return res.status(200).json({
             message: "Verification email resent successfully",
