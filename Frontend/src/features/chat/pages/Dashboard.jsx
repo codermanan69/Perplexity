@@ -139,13 +139,17 @@ const Dashboard = () => {
   }
 
   const handleLogout = async () => {
-    try {
-      await axios.post("http://localhost:3000/api/auth/logout", {}, { withCredentials: true });
-    } catch (err) {
-      console.error("Backend logout failed:", err);
-    }
-    dispatch(setUser(null));
+  try {
+    await axios.post(
+      "http://localhost:3000/api/auth/logout",
+      {},
+      { withCredentials: true }
+    );
+  } catch (err) {
+    console.error("Backend logout failed:", err);
   }
+  dispatch(setUser(null));
+};
 
   const filteredChats = Object.values(chats)
     .filter(c => c.title.toLowerCase().includes(searchQuery.toLowerCase()))
