@@ -1,6 +1,6 @@
 import { useDispatch } from "react-redux"
 
-import {register, login , getMe} from "../service/auth.api"
+import {register, login , getMe, resendVerification} from "../service/auth.api"
 import { setUser, setLoading, setError } from "../auth.slice"
 
 export function useAuth() {
@@ -45,15 +45,30 @@ export function useAuth() {
             dispatch(setUser(data.user))
         }
         catch(error){
-            dispatch(setError(error.response?.data?.message || "Failed to load user"))
+            // Silent catch: unauthenticated initial load is not a user-facing error
         }
         finally{
             dispatch(setLoading(false))
         }
     }
+
+    async function handleResendVerification({ email }) {
+        try {
+            dispatch(setLoading(true));
+            await resendVerification({ email });
+            return { success: true, message: "Verification email sent!" };
+        } catch (error) {
+            console.error("Resend error details:", error.response?.data);
+            return { success: false, message: error.response?.data?.message || "Failed to resend email" };
+        } finally {
+            dispatch(setLoading(false));
+        }
+    }
+
     return {
         handleRegister,
         handleLogin,
-        handlegetMe
+        handlegetMe,
+        handleResendVerification
     }
 }

@@ -1,6 +1,6 @@
 import { initializeSocketConnection } from "../service/chat.socket";
 import { sendMessage, getChats, getMessages, deleteChat } from "../service/chat.api";
-import { setChats, setCurrentChatId, setError, setLoading, createNewChat, addNewMessage, addMessages } from "../chat.slice";
+import { setChats, setCurrentChatId, setError, setLoading, createNewChat, replaceChatId, addNewMessage, addMessages } from "../chat.slice";
 import { useDispatch } from "react-redux";
 
 
@@ -10,25 +10,65 @@ export const useChat = () => {
 
 
     async function handleSendMessage({ message, chatId }) {
-        dispatch(setLoading(true))
-        const data = await sendMessage({ message, chatId })
-        const { chat, aiMessage } = data
-        if (!chatId)
-            dispatch(createNewChat({
-                chatId: chat._id,
-                title: chat.title,
-            }))
-        dispatch(addNewMessage({
-            chatId: chatId || chat._id,
-            content: message,
-            role: "user",
-        }))
-        dispatch(addNewMessage({
-            chatId: chatId || chat._id,
-            content: aiMessage.content,
-            role: aiMessage.role,
-        }))
-        dispatch(setCurrentChatId(chat._id))
+        const isNewChat = !chatId;
+        const tempChatId = isNewChat ? "temp-" + Date.now() : chatId;
+
+        try {
+            if (isNewChat) {
+                // Instantly create local chat representation and show user message
+                dispatch(createNewChat({
+                    chatId: tempChatId,
+                    title: message.substring(0, 30) || "New Chat",
+                }));
+                dispatch(addNewMessage({
+                    chatId: tempChatId,
+                    content: message,
+                    role: "user",
+                }));
+                dispatch(setCurrentChatId(tempChatId));
+            } else {
+                // Instantly show user message in existing chat
+                dispatch(addNewMessage({
+                    chatId,
+                    content: message,
+                    role: "user",
+                }));
+            }
+
+            dispatch(setLoading(true));
+            dispatch(setError(null));
+
+            // Call backend API
+            const data = await sendMessage({ message, chatId: isNewChat ? null : chatId });
+            const { chat, aiMessage } = data;
+
+            if (isNewChat) {
+                // Swap temporary ID with database ID and add AI reply
+                dispatch(replaceChatId({
+                    oldChatId: tempChatId,
+                    newChatId: chat._id,
+                    title: chat.title,
+                }));
+                dispatch(addNewMessage({
+                    chatId: chat._id,
+                    content: aiMessage.content,
+                    role: aiMessage.role,
+                }));
+                dispatch(setCurrentChatId(chat._id));
+            } else {
+                // Add AI reply to existing chat
+                dispatch(addNewMessage({
+                    chatId,
+                    content: aiMessage.content,
+                    role: aiMessage.role,
+                }));
+            }
+        } catch (error) {
+            console.error("Failed to send message:", error);
+            dispatch(setError(error.response?.data?.message || error.message || "Failed to send message"));
+        } finally {
+            dispatch(setLoading(false));
+        }
     }
 
     async function handleGetChats() {
@@ -68,11 +108,32 @@ export const useChat = () => {
         dispatch(setCurrentChatId(chatId))
     }
 
+    async function handleDeleteChat(chatId, chats) {
+        try {
+            dispatch(setLoading(true));
+            await deleteChat(chatId);
+            
+            // Create a copy of chats and delete the target chatId
+            const updatedChats = { ...chats };
+            delete updatedChats[chatId];
+            dispatch(setChats(updatedChats));
+            
+            // Reset currentChatId if we deleted the currently active chat
+            dispatch(setCurrentChatId(null));
+        } catch (error) {
+            console.error("Failed to delete chat:", error);
+            dispatch(setError(error.message || "Failed to delete chat"));
+        } finally {
+            dispatch(setLoading(false));
+        }
+    }
+
     return {
         initializeSocketConnection,
         handleSendMessage,
         handleGetChats,
-        handleOpenChat
+        handleOpenChat,
+        handleDeleteChat
     }
 
 }

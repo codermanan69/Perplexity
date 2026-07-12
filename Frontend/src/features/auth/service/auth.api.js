@@ -23,3 +23,8 @@ export async function getMe() {
     const response = await api.get("/api/auth/get-me");
     return response.data;
 }
+
+export async function resendVerification({ email }) {
+    const response = await api.post("/api/auth/resend-verification", { email });
+    return response.data;
+}

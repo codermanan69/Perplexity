@@ -1,18 +1,186 @@
 @import "tailwindcss";
 
+:root {
+  --background: #f9fbfb;
+  --foreground: #1a202c;
+  
+  --sidebar-bg: #f3f5f6;
+  --sidebar-border: #e2e8f0;
+  --sidebar-hover: #e2e8f0;
+  --sidebar-active: #ffffff;
+  
+  --card-bg: #ffffff;
+  --card-border: #e2e8f0;
+  --card-foreground: #2d3748;
+  
+  --input-bg: #ffffff;
+  --input-border: #cbd5e1;
+  --input-focus: #31b8c6;
+  
+  --chat-bubble-user: #e2f4f6;
+  --chat-bubble-user-text: #0f4c54;
+  --chat-bubble-ai: transparent;
+  --chat-bubble-ai-text: #1a202c;
+  
+  --border: #e2e8f0;
+  --muted: #f8fafc;
+  --muted-foreground: #64748b;
+  
+  --primary: #31b8c6;
+  --primary-hover: #259fae;
+  --shadow: 0 4px 20px -2px rgba(49, 184, 198, 0.08), 0 2px 10px -1px rgba(0, 0, 0, 0.03);
+}
+
+.dark {
+  --background: #0b0c0c;
+  --foreground: #eef1f2;
+  
+  --sidebar-bg: #121415;
+  --sidebar-border: #1d2022;
+  --sidebar-hover: #1d2022;
+  --sidebar-active: #181b1c;
+  
+  --card-bg: #161819;
+  --card-border: #212426;
+  --card-foreground: #e5e7eb;
+  
+  --input-bg: #161819;
+  --input-border: #212426;
+  --input-focus: #31b8c6;
+  
+  --chat-bubble-user: #1f2729;
+  --chat-bubble-user-text: #e2f4f6;
+  --chat-bubble-ai: transparent;
+  --chat-bubble-ai-text: #eef1f2;
+  
+  --border: #1c1e20;
+  --muted: #111314;
+  --muted-foreground: #828c96;
+  
+  --primary: #31b8c6;
+  --primary-hover: #2ba6b3;
+  --shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.5), 0 2px 12px -1px rgba(0, 0, 0, 0.3);
+}
+
 @theme {
-  --color-primary: #31b8c6;
-  --color-primary-hover: #2ba6b3;
-  --animate-fade-in: fade-in 0.3s ease-out;
+  --color-bg-app: var(--background);
+  --color-text-app: var(--foreground);
+  
+  --color-sidebar-bg: var(--sidebar-bg);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-hover: var(--sidebar-hover);
+  --color-sidebar-active: var(--sidebar-active);
+  
+  --color-card-bg: var(--card-bg);
+  --color-card-border: var(--card-border);
+  --color-card-foreground: var(--card-foreground);
+  
+  --color-input-bg: var(--input-bg);
+  --color-input-border: var(--input-border);
+  --color-input-focus: var(--input-focus);
+  
+  --color-chat-user-bg: var(--chat-bubble-user);
+  --color-chat-user-text: var(--chat-bubble-user-text);
+  --color-chat-ai-bg: var(--chat-bubble-ai);
+  --color-chat-ai-text: var(--chat-bubble-ai-text);
+  
+  --color-border-app: var(--border);
+  --color-muted-app: var(--muted);
+  --color-muted-text: var(--muted-foreground);
+  
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  
+  --animate-fade-in: fade-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-fade-in-up: fade-in-up 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-slide-in: slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-scale-in: scale-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 
   @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes fade-in-up {
     from {
       opacity: 0;
-      transform: translateY(-4px);
+      transform: translateY(12px);
     }
     to {
       opacity: 1;
       transform: translateY(0);
     }
   }
+  @keyframes slide-in {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(0); }
+  }
+  @keyframes scale-in {
+    from {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+}
+
+/* Custom premium scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+}
+
+/* Global Reset to apply theme background & transition */
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Custom markdown rendering rules */
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+}
+.prose th {
+  background-color: var(--muted);
+  font-weight: 600;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  border-bottom: 2px solid var(--border);
+}
+.prose td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+.prose tr:hover {
+  background-color: var(--sidebar-bg);
+}
+.prose blockquote {
+  border-left: 4px solid var(--primary);
+  padding-left: 1.25rem;
+  margin-left: 0;
+  margin-right: 0;
+  font-style: italic;
+  color: var(--muted-foreground);
+  background-color: var(--muted);
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-radius: 0 8px 8px 0;
 }

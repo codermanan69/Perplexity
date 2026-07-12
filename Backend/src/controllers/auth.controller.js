@@ -25,18 +25,22 @@ export async function register(req, res) {
 
 
 
-    await sendEmail({
-        to: email,
-        subject: "Welcome to Perplexity!",
-        html: `
-                <p>Hi ${username},</p>
-                <p>Thank you for registering at <strong>Perplexity</strong>. We're excited to have you on board!</p>
-                <p>Please verify your email address by clicking the link below:</p>
-                <a href="http://localhost:3000/api/auth/verify-email?token=${emailVerificationToken}">Verify Email</a>
-                <p>If you did not create an account, please ignore this email.</p>
-                <p>Best regards,<br>The Perplexity Team</p>
-        `
-    })
+    try {
+        await sendEmail({
+            to: email,
+            subject: "Welcome to Perplexity!",
+            html: `
+                    <p>Hi ${username},</p>
+                    <p>Thank you for registering at <strong>Perplexity</strong>. We're excited to have you on board!</p>
+                    <p>Please verify your email address by clicking the link below:</p>
+                    <a href="http://localhost:3000/api/auth/verify-email?token=${emailVerificationToken}">Verify Email</a>
+                    <p>If you did not create an account, please ignore this email.</p>
+                    <p>Best regards,<br>The Perplexity Team</p>
+            `
+        });
+    } catch (mailError) {
+        console.error("Failed to send welcome/verification email:", mailError.message || mailError);
+    }
     res.status(201).json({
         message: "User registered successfully",
         success: true,
@@ -126,40 +130,67 @@ export async function verifyEmail(req, res) {
     const { token } = req.query;
 
     try {
-
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-
-
-
         const user = await userModel.findOne({ email: decoded.email });
 
         if (!user) {
-            return res.status(400).json({
-                message: "Invalid Token",
-                success: false,
-                err: "User not found"
-            })
+            return res.redirect(`http://localhost:5173/verify-email?success=false&error=${encodeURIComponent("User not found")}`);
         }
 
         user.verified = true;
-
         await user.save();
 
-        const html =
-            `
-        <h1>Email Verified Successfully!</h1>
-        <p>Your email has been verified. You can now log in to your account.</p>
-        <a href="http://localhost:5173/login">Go to Login</a>
-    `
-
-        res.send(html);
+        return res.redirect(`http://localhost:5173/verify-email?success=true`);
     } catch (err) {
-        return res.status(400).json({
-            message: "Invalid Token",
-            success: false,
-            err: err.message
-        })
+        return res.redirect(`http://localhost:5173/verify-email?success=false&error=${encodeURIComponent(err.message)}`);
     }
 }
+
+export async function resendVerification(req, res) {
+    const { email } = req.body;
+    try {
+        const user = await userModel.findOne({ email });
+        if (!user) {
+            return res.status(404).json({
+                message: "User not found with this email",
+                success: false
+            });
+        }
+        if (user.verified) {
+            return res.status(400).json({
+                message: "This email is already verified",
+                success: false
+            });
+        }
+        
+        const emailVerificationToken = jwt.sign({
+            email: user.email,
+        }, process.env.JWT_SECRET);
+
+        await sendEmail({
+            to: email,
+            subject: "Welcome to Perplexity!",
+            html: `
+                <p>Hi ${user.username},</p>
+                <p>Thank you for registering at <strong>Perplexity</strong>. We're excited to have you on board!</p>
+                <p>Please verify your email address by clicking the link below:</p>
+                <a href="http://localhost:3000/api/auth/verify-email?token=${emailVerificationToken}">Verify Email</a>
+                <p>If you did not create an account, please ignore this email.</p>
+                <p>Best regards,<br>The Perplexity Team</p>
+            `
+        });
+
+        return res.status(200).json({
+            message: "Verification email resent successfully",
+            success: true
+        });
+    } catch (err) {
+        return res.status(500).json({
+            message: "Failed to resend verification email",
+            success: false,
+            err: err.message
+        });
+    }
+}
+
 
