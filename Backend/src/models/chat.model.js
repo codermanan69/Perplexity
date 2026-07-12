@@ -18,5 +18,7 @@ const chatSchema = new mongoose.Schema(
   }
 );
 
+chatSchema.index({ user: 1 });
+
 const chatModel = mongoose.model('Chat', chatSchema);
 export default chatModel;

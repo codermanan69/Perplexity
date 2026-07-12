@@ -22,5 +22,7 @@ const messageSchema = new mongoose.Schema(
   }
 );
 
+messageSchema.index({ chat: 1 });
+
 const messageModel = mongoose.model('Message', messageSchema);
 export default messageModel;

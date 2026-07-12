@@ -4,6 +4,8 @@ import { setChats, setCurrentChatId, setError, setLoading, createNewChat, replac
 import { useDispatch } from "react-redux";
 
 
+let isFetchingChats = false;
+
 export const useChat = () => {
 
     const dispatch = useDispatch()
@@ -72,19 +74,28 @@ export const useChat = () => {
     }
 
     async function handleGetChats() {
-        dispatch(setLoading(true))
-        const data = await getChats()
-        const { chats } = data
-        dispatch(setChats(chats.reduce((acc, chat) => {
-            acc[ chat._id ] = {
-                id: chat._id,
-                title: chat.title,
-                messages: [],
-                lastUpdated: chat.updatedAt,
-            }
-            return acc
-        }, {})))
-        dispatch(setLoading(false))
+        if (isFetchingChats) return;
+        isFetchingChats = true;
+        
+        try {
+            dispatch(setLoading(true))
+            const data = await getChats()
+            const { chats } = data
+            dispatch(setChats(chats.reduce((acc, chat) => {
+                acc[ chat._id ] = {
+                    id: chat._id,
+                    title: chat.title,
+                    messages: [],
+                    lastUpdated: chat.updatedAt,
+                }
+                return acc
+            }, {})))
+        } catch (error) {
+            console.error("Failed to fetch chats:", error);
+        } finally {
+            dispatch(setLoading(false))
+            isFetchingChats = false;
+        }
     }
 
     async function handleOpenChat(chatId, chats) {
