@@ -68,7 +68,7 @@ export async function sendMessage(req, res) {
     } catch (error) {
         console.error("Error in sendMessage:", error);
         res.status(500).json({
-            message: "Failed to generate AI response",
+            message: `AI Error: ${error.message}`,
             error: error.message
         });
     }
