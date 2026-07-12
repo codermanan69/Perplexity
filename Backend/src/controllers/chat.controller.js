@@ -4,66 +4,74 @@ import messageModel from '../models/message.model.js'
 
 
 export async function sendMessage(req, res) {
-    const startTime = performance.now();
-    const { message, chat: chatId } = req.body;
-    let title = null, chat = null;
-    let titleTime = 0;
-    let aiTime = 0;
+    try {
+        const startTime = performance.now();
+        const { message, chat: chatId } = req.body;
+        let title = null, chat = null;
+        let titleTime = 0;
+        let aiTime = 0;
 
-    let activeChatId = chatId;
+        let activeChatId = chatId;
 
-    if (!chatId) {
-        chat = await chatModel.create({
-            user: req.user.id,
-            title: message.substring(0, 50) || 'New Chat'
-        });
-        activeChatId = chat._id;
-    }
-
-    const userMessage = await messageModel.create({
-        chat: activeChatId,
-        content: message,
-        role: "user"
-    })
-
-    const messages = await messageModel.find({ chat: activeChatId })
-
-    const aiStart = performance.now();
-    const titlePromise = !chatId ? generateChatTitle(message) : Promise.resolve(null);
-    const responsePromise = generateResponse(messages);
-
-    const [result, generatedTitle] = await Promise.all([
-        responsePromise,
-        titlePromise
-    ]);
-    aiTime = performance.now() - aiStart;
-
-    const aiMessage = await messageModel.create({
-        chat : activeChatId,
-        content : result,
-        role : "ai"
-    })
-
-    if (generatedTitle) {
-        title = generatedTitle;
-        chat.title = generatedTitle;
-        await chat.save();
-    }
-
-    const endTime = performance.now();
-    const totalBackendTime = endTime - startTime;
-
-    res.status(201).json({
-        aiMessage: result,
-        title,
-        chat,
-        aiMessage,  
-        timings: {
-            aiProviderWait: aiTime,
-            backendExecution: totalBackendTime,
-            dbOperations: totalBackendTime - aiTime
+        if (!chatId) {
+            chat = await chatModel.create({
+                user: req.user.id,
+                title: message.substring(0, 50) || 'New Chat'
+            });
+            activeChatId = chat._id;
         }
-    })
+
+        const userMessage = await messageModel.create({
+            chat: activeChatId,
+            content: message,
+            role: "user"
+        })
+
+        const messages = await messageModel.find({ chat: activeChatId })
+
+        const aiStart = performance.now();
+        const titlePromise = !chatId ? generateChatTitle(message) : Promise.resolve(null);
+        const responsePromise = generateResponse(messages);
+
+        const [result, generatedTitle] = await Promise.all([
+            responsePromise,
+            titlePromise
+        ]);
+        aiTime = performance.now() - aiStart;
+
+        const aiMessage = await messageModel.create({
+            chat : activeChatId,
+            content : result,
+            role : "ai"
+        })
+
+        if (generatedTitle) {
+            title = generatedTitle;
+            chat.title = generatedTitle;
+            await chat.save();
+        }
+
+        const endTime = performance.now();
+        const totalBackendTime = endTime - startTime;
+
+        res.status(201).json({
+            aiMessage: result,
+            title,
+            chat,
+            aiMessage,  
+            timings: {
+                aiProviderWait: aiTime,
+                backendExecution: totalBackendTime,
+                dbOperations: totalBackendTime - aiTime
+            }
+        })
+    } catch (error) {
+        console.error("Error in sendMessage:", error);
+        res.status(500).json({
+            message: "Failed to generate AI response",
+            error: error.message
+        });
+    }
 }
 
 export async function getChats(req, res){
