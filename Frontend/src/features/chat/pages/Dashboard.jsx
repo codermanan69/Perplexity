@@ -141,7 +141,7 @@ const Dashboard = () => {
   const handleLogout = async () => {
   try {
     await axios.post(
-      "http://localhost:3000/api/auth/logout",
+    "/auth/logout",
       {},
       { withCredentials: true }
     );
