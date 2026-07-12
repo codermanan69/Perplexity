@@ -50,8 +50,14 @@ export async function generateResponse(messages) {
             })) ]
     });
 
-    return response.messages[ response.messages.length - 1 ].text;
+    const lastMessage = response.messages?.[response.messages.length - 1];
+    let aiText = lastMessage?.content || lastMessage?.text;
+    
+    if (!aiText || typeof aiText !== 'string') {
+        throw new Error(`Invalid response from AI Agent. Agent output: ${JSON.stringify(response)}`);
+    }
 
+    return aiText;
 }
 
 export async function generateChatTitle(message) {
