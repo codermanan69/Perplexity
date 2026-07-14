@@ -32,8 +32,27 @@ const agent = createAgent({
 })
 
 export async function generateResponse(messages) {
-    console.log(messages) 
+    const lastUserMessage = messages[messages.length - 1]?.content?.trim().toLowerCase() || "";
+    
+    // Heuristic: If it's a very simple greeting or very short non-search text, skip the Agent entirely for speed.
+    const isCasualGreeting = /^(hi|hello|hey|sup|how are you|thanks|thank you|ok|okay|bye|good morning|good night)$/i.test(lastUserMessage);
+    const isVeryShort = lastUserMessage.length <= 15 && !/what|who|where|when|why|how|search|latest|news/i.test(lastUserMessage);
 
+    if (isCasualGreeting || isVeryShort) {
+        // Direct LLM call (takes ~1 second) without going through the slow Tool Reasoning loop
+        const directMessages = messages.map(msg => {
+            return msg.role === "user" ? new HumanMessage(msg.content) : new AIMessage(msg.content);
+        });
+        
+        const directResponse = await geminiModel.invoke([
+            new SystemMessage("You are a helpful and precise assistant."),
+            ...directMessages
+        ]);
+        
+        return directResponse.content || directResponse.text;
+    }
+
+    // Normal Agent Flow with Internet Search capability
     const response = await agent.invoke({
         messages: [
             new SystemMessage(`

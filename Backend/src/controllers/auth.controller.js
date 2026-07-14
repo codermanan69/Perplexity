@@ -191,5 +191,3 @@ export async function resendVerification(req, res) {
         });
     }
 }
-
-
