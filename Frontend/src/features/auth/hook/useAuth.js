@@ -10,6 +10,7 @@ export function useAuth() {
         try {
             dispatch(setLoading(true))
             const data = await register({email , username , password})
+            dispatch(setUser(data.user))
             return true;
         }
         catch(error) {

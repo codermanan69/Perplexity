@@ -40,6 +40,14 @@ export async function register(req, res) {
     }).catch(mailError => {
         console.error("Failed to send welcome/verification email:", mailError.message || mailError);
     });
+
+    const token = jwt.sign({
+        id: user._id,
+        username: user.username,
+    }, process.env.JWT_SECRET, { expiresIn: '7d' });
+
+    res.cookie("token", token);
+
     res.status(201).json({
         message: "User registered successfully",
         success: true,
@@ -49,8 +57,6 @@ export async function register(req, res) {
             email: user.email
         }
     });
-
-
 }
 
 export async function login(req, res) {
@@ -73,14 +79,6 @@ export async function login(req, res) {
             message: "Invalid email and password",
             success: false,
             err: "Invalid credentials"
-        })
-    }
-
-    if (!user.verified) {
-        return res.status(400).json({
-            message: "Please verify your email",
-            success: false,
-            err: "Email not verified"
         })
     }
 

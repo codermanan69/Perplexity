@@ -72,11 +72,11 @@ const Register = () => {
 
     const success = await handleRegister(formData);
     if (success) {
-      setSuccessMessage('Account created successfully! Verification email sent.');
+      setSuccessMessage('Account created successfully! Redirecting...');
       setTimeout(() => {
-        // Redirect user to the verification page pending screen
-        navigate(`/verify-email?pending=true&email=${encodeURIComponent(formData.email)}`);
-      }, 2000);
+        // Redirect user straight to Dashboard
+        navigate(`/`);
+      }, 1500);
     } else {
       setIsSubmitLoading(false);
     }
