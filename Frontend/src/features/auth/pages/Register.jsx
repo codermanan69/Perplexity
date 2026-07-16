@@ -70,13 +70,13 @@ const Register = () => {
     setIsSubmitLoading(true);
     dispatch(setError(null));
 
-    const success = await handleRegister(formData);
-    if (success) {
-      setSuccessMessage('Account created successfully! Redirecting...');
+    const res = await handleRegister(formData);
+    if (res.success) {
+      setSuccessMessage(res.message || "We've sent a verification email to your email address.");
       setTimeout(() => {
-        // Redirect user straight to Dashboard
-        navigate(`/`);
-      }, 1500);
+        // Redirect user to the existing VerifyEmail page in pending state
+        navigate(`/verify-email?pending=true&email=${encodeURIComponent(formData.email)}`);
+      }, 2500);
     } else {
       setIsSubmitLoading(false);
     }

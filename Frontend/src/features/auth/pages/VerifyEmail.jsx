@@ -1,16 +1,21 @@
-import React, { useState } from 'react';
-import { useSearchParams, Link } from 'react-router';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams, Link, useNavigate } from 'react-router';
 import { useAuth } from '../hook/useAuth';
 import { CheckCircle2, XCircle, Mail, Loader2, ArrowRight } from 'lucide-react';
+import api from '../service/auth.api';
+import { useDispatch } from 'react-redux';
+import { setUser } from '../auth.slice';
 
 const VerifyEmail = () => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const success = searchParams.get('success');
   const errorMsg = searchParams.get('error');
   const pending = searchParams.get('pending') === 'true';
   const emailParam = searchParams.get('email') || '';
   const tokenParam = searchParams.get('token') || '';
   const { handleResendVerification } = useAuth();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const [email, setEmail] = useState(emailParam);
   const [resendStatus, setResendStatus] = useState({ loading: false, success: false, message: '' });
@@ -27,6 +32,38 @@ const VerifyEmail = () => {
       setResendStatus({ loading: false, success: false, message: res.message });
     }
   };
+
+  useEffect(() => {
+    if (tokenParam && success === null) {
+      const verifyToken = async () => {
+        try {
+          const response = await api.get(`/auth/verify-email?token=${tokenParam}`);
+          if (response.data.success) {
+            if (response.data.user) {
+              dispatch(setUser(response.data.user));
+            }
+            setSearchParams({ success: 'true' });
+          } else {
+            setSearchParams({ success: 'false', error: response.data.message || 'Verification failed' });
+          }
+        } catch (err) {
+          const errorDetail = err.response?.data?.message || err.message || 'Verification failed';
+          setSearchParams({ success: 'false', error: errorDetail });
+        }
+      };
+
+      verifyToken();
+    }
+  }, [tokenParam, success, setSearchParams, dispatch]);
+
+  useEffect(() => {
+    if (success === 'true') {
+      const timer = setTimeout(() => {
+        navigate('/');
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [success, navigate]);
 
   // Determine state
   const isVerifying = success === null && tokenParam !== '';
@@ -64,15 +101,15 @@ const VerifyEmail = () => {
             <div className="space-y-2">
               <h2 className="text-3xl font-extrabold tracking-tight animate-fade-in">Verification Success!</h2>
               <p className="text-muted-text text-sm max-w-sm">
-                Your email has been verified. Welcome aboard! You can now access all features of our platform.
+                Your email has been verified. Welcome aboard! You are now logged in. Redirecting to dashboard...
               </p>
             </div>
 
             <Link
-              to="/login"
+              to="/"
               className="w-full bg-primary hover:bg-primary-hover text-slate-950 font-semibold py-3 px-4 rounded-xl shadow-lg transition-all duration-200 flex items-center justify-center gap-2 group mt-4 cursor-pointer"
             >
-              Go to Login
+              Go to Dashboard
               <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
             </Link>
           </div>
